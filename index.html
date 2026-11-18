@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Blackjack EV Strategy Engine — Round Mode</title>
+<title>Blackjack EV Strategy Engine v3</title>
 <style>
 :root{--bg:#f6f5f1;--sf:#fff;--tx:#1d2420;--mu:#5d675f;--ac:#0b6b4a;--bd:#dcdad2;--bad:#b3261e;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--sf:#1b2320;--tx:#e8ece9;--mu:#9aa69e;--ac:#4cc79a;--bd:#2e3a35;--bad:#ff8a80;color-scheme:dark}}
@@ -11,20 +11,20 @@ main{max-width:1060px;margin:0 auto;padding:16px}h1{font-size:22px;margin:4px 0}
 .mu{color:var(--mu);font-size:13px}.g{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:14px}@media(max-width:820px){.g{grid-template-columns:1fr}}
 .c{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
 button,select,input{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:5px 8px}button{cursor:pointer}button.on{background:var(--ac);color:var(--bg);border-color:var(--ac)}
-.rk{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0}.rk button{padding:8px 0}.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.rk{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0}.rk button{padding:14px 0;font-size:17px;font-weight:600}.rk .wd{font-size:13px}.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
 .chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--bd);border-radius:8px;padding:3px 8px;font-weight:600}.chip button{border:0;background:none;padding:0 2px;color:var(--mu)}.red{color:var(--bad)}
 .rl{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rl label{display:flex;flex-direction:column;font-size:12px;color:var(--mu)}.rl input[type=checkbox]{width:auto}
 .seen{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;font-size:12px}.seen div{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--bd);border-radius:6px;padding:2px 4px}.seen button{padding:0 5px}
 .top{font-size:26px;font-weight:700;color:var(--ac)}.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}tr.best td{font-weight:700;color:var(--ac)}
-.lab{font-size:11px;border:1px solid var(--bd);border-radius:5px;padding:0 5px;color:var(--mu)}.br{display:grid;grid-template-columns:78px 1fr 48px;align-items:center;gap:6px;font-size:12px}.br i{display:block;height:8px;background:var(--ac);border-radius:4px}.br.hl{font-weight:700}ul{margin:6px 0;padding-left:18px}.ok{color:var(--ac)}.bd{color:var(--bad)}
+.lab{font-size:11px;border:1px solid var(--bd);border-radius:5px;padding:0 5px;color:var(--mu)}.br{display:grid;grid-template-columns:78px 1fr 48px;align-items:center;gap:6px;font-size:12px}.br i{display:block;height:8px;background:var(--ac);border-radius:4px}.br.hl{font-weight:700}#gta{display:none;width:100%;height:120px;margin-top:8px}.warn{border:1px solid var(--bad);color:var(--bad);border-radius:8px;padding:6px 10px;margin:8px 0;font-weight:600}.warn.good{border-color:var(--ac);color:var(--ac)}ul{margin:6px 0;padding-left:18px}.ok{color:var(--ac)}.bd{color:var(--bad)}
 </style></head><body><main>
-<h1>Blackjack EV Strategy Engine <span class="lab">v2 · round mode</span></h1>
+<h1>Blackjack EV Strategy Engine <span class="lab">v3 · history &amp; sync</span></h1>
 <p class="mu">Ranks every legal action by expected value per unit of the initial wager. Blackjack carries a house edge under every rule set: this finds the best available play, it cannot guarantee wins or remove that edge.</p>
 <div class="g"><div>
 <section class="c"><h3>Cards</h3>
-<div class="row"><button id="tp" class="on">Player card</button><button id="td">Dealer upcard</button><span class="mu">Suit:</span><span id="suits"></span></div>
+<div class="row"><span class="mu">Cards go to the highlighted hand ·</span><button data-undo="1">↶ Undo last card</button><label class="mu"><input type="checkbox" id="au" checked> auto-advance</label></div>
 <div class="rk" id="rk"></div>
-<div class="row"><b>Player:</b><span id="pc"></span></div><div class="row"><b>Dealer:</b><span id="dc"></span></div></section>
+<div class="row"><button data-tg="p">Player</button><span id="pc"></span><button data-clr="p">Clear player hand</button></div><div class="row"><button data-tg="d">Dealer</button><span id="dc"></span><button data-clr="d">Reset dealer hand</button></div><p class="mu">Tap a hand name to choose where cards go. Dealer: first card = upcard, then hole card and draws. Auto-advance moves from your 2nd card to the dealer upcard, then back to your hand.</p></section>
 <section class="c"><h3>Table rules</h3><div class="rl">
 <label>Decks<select id="decks"><option>1</option><option>2</option><option>4</option><option selected>6</option><option>8</option></select></label>
 <label>Dealer soft 17<select id="h17"><option value="0">Stands (S17)</option><option value="1">Hits (H17)</option></select></label>
@@ -35,18 +35,26 @@ button,select,input{font:inherit;color:var(--tx);background:var(--bg);border:1px
 <label><span>This hand came from a split</span><input type="checkbox" id="fs"></label>
 <label>Simulation samples<select id="N"><option value="20000">20,000</option><option value="100000" selected>100,000</option><option value="500000">500,000</option></select></label>
 <label>Bet (optional)<input type="number" id="bet" min="0" placeholder="e.g. 25"></label>
-<label>Bankroll (optional)<input type="number" id="bank" min="0" placeholder="e.g. 1000"></label></div>
+<label>Bankroll (optional)<input type="number" id="bank" min="0" placeholder="e.g. 1000"></label>
+<label>Minimum bet<input type="number" id="minbet" min="0" value="10"></label></div>
 <p class="mu">Assumes dealer peeks for blackjack, one card on split aces, no resplitting.</p></section>
 <section class="c"><h3>Other cards already seen (optional)</h3><div class="seen" id="seen"></div><p class="mu">Count cards from earlier hands or other players so the remaining shoe is exact.</p></section>
 </div><div>
+<section class="c" id="prof"><h3>Player profile &amp; sync</h3>
+<div class="row"><span id="pcode" class="chip">—</span><button data-pf="copy">Copy code</button><input id="pname" placeholder="Nickname (optional)" maxlength="24" style="width:150px"></div>
+<div class="row"><button data-pf="mk">Make Code</button><button data-pf="ld">Load Code</button></div><textarea id="lc" placeholder="Make Code puts your backup here and copies it. To restore, paste a code here and press Load Code." style="width:100%;height:60px"></textarea>
+<div id="sst" class="mu">Checking cloud sync…</div>
+<p class="mu">Make Code copies a backup of your data (base64 text) to the clipboard. On another device, paste it above and press Load Code (tap twice to confirm; it replaces that device’s data). Game history can also be downloaded as JSON for AI analysis.</p></section>
 <section class="c" id="sess"><h3>Session · Round <span id="rn">1</span></h3>
 <div class="row"><button data-act="W">Player won</button><button data-act="L">Dealer won</button><button data-act="P">Push</button><button data-act="next">Next Round ▶</button></div>
-<div class="row"><button data-act="new">New Game</button><button data-act="rh">Reset card history</button><span id="msg" class="bd"></span></div><div id="stt"></div>
+<div class="row"><button data-act="new">New Game</button><button data-act="rh">Reset card history</button><span id="msg" class="bd"></span></div><div id="stt"></div><div id="bm"></div>
 <p class="mu">Per round: add your cards, then the dealer cards (first = upcard, next = hole card and draws), log the result, press Next Round. Cards of finished rounds leave the shoe automatically.</p></section>
 <section class="c" id="res"><p class="mu">Choose at least two player cards and a dealer upcard.</p></section>
 <section class="c"><h3>Card history &amp; dealer hole-card prediction</h3>
 <label class="mu"><input type="checkbox" id="pk" checked> Dealer peeked and has no blackjack (affects A / 10 upcards)</label><div id="hole"></div>
 <h3 style="margin-top:12px">Cards seen since last shuffle</h3><div class="seen" id="hc"></div><h3 style="margin-top:12px">Round log</h3><div id="log" class="mu">No rounds yet.</div></section>
+<section class="c" id="gh"><h3>Game history</h3><div id="ghs"></div>
+<div class="row"><button data-gh="json">Download JSON (for AI analysis)</button><button data-gh="csv">Download rounds CSV</button><button data-gh="copy">Copy AI prompt + data</button><button data-gh="imp">Import JSON</button><input type="file" id="gi" accept=".json,application/json" style="display:none"></div><div id="gmsg" class="mu">New Game saves the current session here.</div><textarea id="gta" readonly></textarea></section>
 <section class="c"><h3>Method &amp; validation <button id="rt">Re-run self-test</button></h3><div id="tst" class="mu"></div></section>
 </div></div></main>
 <script id="engine">
@@ -76,8 +84,8 @@ function analyze(cards,up,rl,extra){
  const c=shoeCounts(rl.decks,cards.concat([up]),extra||[]),E=engine(c,rl,up),h=cards.reduce((a,b)=>a+b,0),a=cards.includes(1),t=tot(h,a),two=cards.length==2,b=E.D.b;
  const adj=v=>[-b+(1-b)*v[0],(1-b)*v[1],(1-b)*v[2]+b,(1-b)*v[3]];
  const an={cards,up,counts:c,b,t,h,a,E,soft:a&&h+10<=21,acts:{},risk:{S:1,H:1,D:2,P:2,R:.5},dealerBust:(1-b)*E.D.d[5],dealerDist:E.D.d};
- if(two&&t==21&&a&&!rl.fromSplit){an.bj=true;an.acts.S=[(1-b)*rl.pay,1-b,0,b];return an}
- an.acts.S=adj(E.st(t));
+ if(two&&t==21&&a&&!rl.fromSplit){an.bj=true;an.best='S';an.acts.S=[(1-b)*rl.pay,1-b,0,b];return an}
+ an.acts.S=h>21?[-1,0,1,0]:adj(E.st(t));
  if(t<21){an.acts.H=adj(E.hit(h,a));let bu=0;for(let r=1;r<=10;r++)if(h+r>21)bu+=E.p[r];an.bustHit=bu}
  if(two&&(!rl.fromSplit||rl.das)&&E.dblOK(h,a))an.acts.D=adj(E.dbl(h,a));
  if(two&&!rl.fromSplit&&cards[0]==cards[1])an.acts.P=adj(E.split(cards[0]));
@@ -117,8 +125,8 @@ function selfTest(){
 </script>
 <script>
 const RL=['A','2','3','4','5','6','7','8','9','10','J','Q','K'],val=i=>i==0?1:Math.min(10,i+1),NM={S:'Stand',H:'Hit',D:'Double',P:'Split',R:'Surrender'};
-const S={pc:[],dc:[],rounds:[],shuf:0,res:null,tgt:'p',suit:'♠',ex:Array(11).fill(0),run:0},$=id=>document.getElementById(id),f=(x,d=3)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d),pc=x=>(x*100).toFixed(1)+'%';
-const chip=(c,i,k)=>`<span class="chip ${'♥♦'.includes(c.s)?'red':''}">${RL[c.i]}${c.s}<button data-x="${k}${i}">×</button></span>`;
+const S={pc:[],dc:[],rounds:[],shuf:0,res:null,decs:{},tgt:'p',suit:'♠',ex:Array(11).fill(0),run:0},$=id=>document.getElementById(id),f=(x,d=3)=>(x>=0?'+':'−')+Math.abs(x).toFixed(d),pc=x=>(x*100).toFixed(1)+'%';
+const chip=(c,i,k)=>`<span class="chip">${RL[c.i]}<button data-x="${k}${i}">×</button></span>`;
 function rules(){return{decks:+$('decks').value,h17:$('h17').value=='1',pay:+$('pay').value,dbl:$('dbl').value,das:$('das').checked,sur:$('sur').checked,fromSplit:$('fs').checked}}
 function drawCards(){$('pc').innerHTML=S.pc.map((c,i)=>chip(c,i,'p')).join('')||'<span class="mu">none</span>';$('dc').innerHTML=S.dc.map((c,i)=>chip(c,i,'d')).join('')||'<span class="mu">none</span>';
  $('seen').innerHTML=RL.slice(0,10).map((l,i)=>`<div><span>${i==9?'10-J-Q-K':l}</span><span><button data-s="${i}" data-d="-1">−</button> ${S.ex[i+1]} <button data-s="${i}" data-d="1">+</button></span></div>`).join('')}
@@ -142,49 +150,126 @@ function show(mcs){
  const rows=ks.map(x=>{const v=an.acts[x],m=mcs&&mcs[x],cmpr=m?`${f(m.mean)} ± ${m.ci.toFixed(3)}`:x=='R'?'exact':mcs?'—':'…';
   return`<tr class="${x==k?'best':''}"><td>${NM[x]}</td><td>${f(v[0],4)}</td><td>${cmpr}</td><td>${x=='R'?'—':pc(v[1])}</td><td>${x=='R'?'—':pc(v[3])}</td><td>${x=='R'?'—':pc(v[2])}</td><td>${an.risk[x]}</td></tr>`}).join('');
  let mcn='';if(mcs&&mcs[k]){const dis=ks.filter(x=>mcs[x]&&mcs[x].mean-mcs[x].ci>mcs[k].mean+mcs[k].ci);mcn=dis.length?`<span class="bd">Simulation disagrees with exact ranking for ${dis.map(x=>NM[x]).join(', ')} (finite-shoe effect) — treat as a close call.</span>`:'<span class="ok">Simulation agrees with the exact ranking within its confidence intervals.</span>'}
- $('res').innerHTML=`<div class="mu">${S.pc.map(c=>RL[c.i]+c.s).join(' ')} vs dealer ${RL[S.dc[0].i]}${S.dc[0].s} · ${an.bj?'Blackjack':(an.soft?'Soft ':'Hard ')+an.t}</div><div class="top">${NM[k]}${an.bj?' (Blackjack)':''}</div>
+ const tr=trainer(an,k,bet);$('res').innerHTML=`<div class="mu">${S.pc.map(c=>RL[c.i]).join(' ')} vs dealer ${RL[S.dc[0].i]} · ${an.bj?'Blackjack':(an.soft?'Soft ':'Hard ')+an.t}</div><div class="top">${NM[k]}${an.bj?' (Blackjack)':''}</div>
  <div class="mu">EV ${f(an.acts[k][0],4)} per unit wagered${bet?` · ≈ ${f(an.acts[k][0]*bet,2)} on a ${bet} bet`:''}${bet&&bank?` · bet = ${(bet/bank*100).toFixed(1)}% of bankroll`:''}</div>
- <div class="wrap"><table><tr><th>Action</th><th>EV exact <span class="lab">exact*</span></th><th>EV simulated <span class="lab">estimate ±95% CI</span></th><th>Win</th><th>Push</th><th>Loss</th><th>Units risked</th></tr>${rows}</table></div>
+ ${tr}<div class="wrap"><table><tr><th>Action</th><th>EV exact <span class="lab">exact*</span></th><th>EV simulated <span class="lab">estimate ±95% CI</span></th><th>Win</th><th>Push</th><th>Loss</th><th>Units risked</th></tr>${rows}</table></div>
  <p class="mu">${an.bustHit!=null?`Bust on next hit: ${pc(an.bustHit)} · `:''}Dealer bust: ${pc(an.dealerBust)} · Dealer blackjack (peeked): ${pc(an.b)} · Win/push/loss shown per hand played. ${mcs?'Simulation: '+(mcs[k]?mcs[k].N.toLocaleString():'')+' hands per action, drawing without replacement from the actual remaining shoe. '+mcn:'Simulating…'}</p>
  <p class="mu">*Exact = full probability tree for the stated shoe composition (card draws treated as independent, exact for large shoes; for 1–2 decks the simulation is the better check). EV is per unit of the initial wager; double and split risk 2 units.</p>
  <h3>Plain-English breakdown</h3><ul>${explain(an,rl,bet).map(l=>'<li>'+l+'</li>').join('')}</ul>`;
  if(!mcs&&!an.bj){const id=++S.run;setTimeout(()=>{if(id!=S.run)return;const o={};for(const x of Object.keys(an.acts))o[x]=mc(an,rl,x,+$('N').value);if(id==S.run)show(o)},30)}}
 function test(){const t=selfTest();$('tst').innerHTML=`<b class="${t.bad.length||t.probFail?'bd':'ok'}">Strategy chart check: ${t.ok} exact matches, ${t.near} near-ties (EV gap &lt; 0.01), ${t.bad.length} real mismatches out of ${t.total} chart cells; probability checks failed: ${t.probFail}.</b>${t.bad.length?'<ul>'+t.bad.map(x=>'<li>'+x+'</li>').join('')+'</ul>':''}<br>Baseline: multi-deck S17, DAS, double any, no resplit. Near-ties are cells where infinite-composition math and the printed chart differ by under 0.01 EV (deck-dependent plays). Exact EVs come from a full dealer/player probability tree; simulated EVs from shoe-accurate Monte Carlo, shown with 95% confidence intervals. The explanation text is generated deterministically from these numbers.`}
-const hv=c=>val(c.i);
+const hv=c=>val(c.i),sigOf=()=>S.pc.map(hv)+'|'+(S.dc[0]?hv(S.dc[0]):0),ING={S:'Standing',H:'Hitting',D:'Doubling',P:'Splitting',R:'Surrendering'};
+const LS='bjev3',AL='ABCDEFGHJKMNPQRSTUVWXYZ23456789',lb=c=>RL[c.i];let DB=null,lastL='';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function mkCode(){const a=new Uint32Array(8);crypto.getRandomValues(a);const t=[...a].map(x=>AL[x%AL.length]).join('');return'BJ-'+t.slice(0,4)+'-'+t.slice(4)}
+Object.assign(S,{code:'',name:'',hist:[],del:[],upd:0,t0:Date.now(),pt:0,sc:0});
+const PROMPT='You are a blackjack strategy coach. The JSON below is my training history from an EV-based blackjack trainer. In sessions[].rounds[], p = my card ranks, d = dealer cards (first = upcard, then hole card and draws), res = W/L/P from my side. decs lists each decision: hand = my card values|dealer upcard value (A = 1, 10/J/Q/K = 10), played vs best action, ev_loss = expected value per unit wagered given up (0 = optimal). EV figures are model-based, not realized results. Please: 1) summarize my win rate and how much is plausibly luck versus decision quality, 2) find my costliest recurring mistakes by hand type, 3) suggest targeted drills and rule-specific adjustments, 4) propose data-driven refinements to my strategy. Blackjack has a house edge, so do not promise guaranteed profit.';
+const snap=()=>({code:S.code,name:S.name,upd:S.upd,hist:S.hist,del:S.del,cur:{pc:S.pc,dc:S.dc,rounds:S.rounds,shuf:S.shuf,res:S.res,decs:S.decs,ex:S.ex,t0:S.t0},cfg:cfg()});
+function merge(o){const ids=new Set(S.del.concat(o.del||[])),m={};for(const x of S.hist.concat(o.hist||[]))m[x.id]=m[x.id]||x;S.del=[...ids];S.hist=Object.values(m).filter(x=>!ids.has(x.id)).sort((a,b)=>b.ended-a.ended);
+ if((o.upd||0)>S.upd&&o.cur){Object.assign(S,o.cur);S.upd=o.upd}if(o.name&&!S.name)S.name=o.name}
+function persist(){clearTimeout(S.pt);S.pt=setTimeout(save,900)}
+function save(force){const o=snap(),k=JSON.stringify({...o,upd:0});if(k==lastL&&!force)return;lastL=k;S.upd=o.upd=Date.now();try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}return push(o)}
+function compact(o){o=JSON.parse(JSON.stringify(o));for(let i=o.hist.length-1;i>=0&&JSON.stringify(o).length>200000;i--)delete o.hist[i].rounds;return o}
+async function push(o){if(!DB||!S.code)return;try{await DB.doc('players/'+S.code).set(compact(o));ss('Cloud: synced ✓ '+new Date().toLocaleTimeString())}catch(e){ss('Cloud sync failed ('+(e.code||e.message)+'). Data is safe on this device.')}}
+const ss=t=>{$('sst').textContent=t},gm=t=>{$('gmsg').textContent=t};
+async function remote(c){const d=await DB.doc('players/'+c).get();return d.exists?d.data():null}
+function refresh(){renderProf();drawCards();show()}
+function renderProf(){$('pcode').textContent=S.code;$('pname').value=S.name}
+async function prof(a,b){if(a=='mk'){makeBackup();return}if(a=='ld'){loadBackup(b);return}
+ if(a=='copy'){try{await navigator.clipboard.writeText(S.code);ss('Code copied.')}catch(e){ss('Copy failed; select the code manually: '+S.code)}return}
+ if(!DB){ss('Cloud sync is not available on this host. Use Download JSON here and Import JSON on your other device.');return}
+ try{if(a=='join'){const c=$('jcode').value.trim().toUpperCase();if(!/^BJ-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(c)){ss('Code format is BJ-XXXX-XXXX.');return}
+   const d=await remote(c);if(!d){ss('No profile found for that code.');return}
+   S.code=c;S.upd=0;merge(d);lastL='';await save(true);refresh();ss('Profile '+c+' loaded; this device\u2019s sessions were merged in.')}
+  else{const d=await remote(S.code);if(d)merge(d);lastL='';await save(true);refresh()}}catch(e){ss('Sync failed ('+(e.code||e.message)+').')}}
+function initP(){let o=null;try{o=JSON.parse(localStorage.getItem(LS))}catch(e){}
+ if(o&&o.code){S.code=o.code;S.name=o.name||'';S.hist=o.hist||[];S.del=o.del||[];S.upd=o.upd||0;if(o.cur)Object.assign(S,o.cur);setCfg(o.cfg)}else S.code=mkCode();
+ $('pname').addEventListener('change',()=>{S.name=$('pname').value.trim();persist()});$('gi').addEventListener('change',async()=>{const f=$('gi').files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!Array.isArray(o.sessions))throw 0;const n0=S.hist.length;merge({hist:o.sessions,del:[],name:(o.player||{}).name});lastL='';save(true);renderHist();gm('Imported: '+(S.hist.length-n0)+' new session(s) merged.')}catch(e){gm('That file is not a valid export.')}$('gi').value=''});renderProf();
+ Promise.resolve().then(()=>window.claude&&window.claude.use('db')).then(async d=>{DB=d||null;
+  if(!DB){ss('Standalone mode: data is saved in this browser. Use Download JSON / Import JSON to move it between devices.');return}
+  try{const r=await remote(S.code);if(r)merge(r);lastL='';await save(true);refresh()}catch(e){ss('Cloud sync failed ('+(e.code||e.message)+').')}}).catch(()=>ss('Cloud sync unavailable here.'))}
+function archive(){const n=S.rounds.length;if(!n){$('msg').textContent='No completed rounds, so nothing was saved to history.';return}
+ const st=stats(),ds=[],rr=S.rounds.map(r=>{const dd=Object.entries(r.decs||{}).map(([h,z])=>({hand:h,played:z.a,best:z.best||null,ev_played:z.ev??null,ev_best:z.evb??null,ev_loss:+z.loss.toFixed(4)}));ds.push(...dd);return{p:r.p.map(lb),d:r.d.map(lb),res:r.res,decs:dd}}),bad=ds.filter(z=>z.ev_loss<-1e-9);
+ S.hist.unshift({id:uid(),started:S.t0,ended:Date.now(),n,w:st.w,l:st.l,p:st.p,winPct:+(st.w/n).toFixed(4),winPctExPush:n-st.p?+(st.w/(n-st.p)).toFixed(4):null,dn:ds.length,dopt:ds.length-bad.length,lost:+bad.reduce((a,z)=>a+z.ev_loss,0).toFixed(4),cum:st.cum.map(v=>+v.toFixed(4)),rules:rules(),rounds:rr});
+ $('msg').textContent='Session saved to history ('+n+' rounds).';S.upd=0}
+function renderHist(){const H=S.hist;let n=0,w=0,l=0,p=0,dn=0,dopt=0,lost=0;H.forEach(x=>{n+=x.n;w+=x.w;l+=x.l;p+=x.p;dn+=x.dn;dopt+=x.dopt;lost+=x.lost});
+ $('ghs').innerHTML=H.length?`<b>Lifetime win rate: ${pc(w/n)}</b> <span class="mu">${H.length} game${H.length>1?'s':''} · ${n} rounds · ${w}W ${l}L ${p}P${dn?` · ${pc(dopt/dn)} optimal plays · EV given up ${f(lost)}`:''}</span><div class="wrap"><table><tr><th>Ended</th><th>Rounds</th><th>W-L-P</th><th>Win %</th><th>Excl. pushes</th><th>Optimal</th><th>EV lost</th><th></th></tr>`+H.map(x=>`<tr><td>${new Date(x.ended).toLocaleString()}</td><td>${x.n}</td><td>${x.w}-${x.l}-${x.p}</td><td>${pc(x.w/x.n)}</td><td>${x.n-x.p?pc(x.w/(x.n-x.p)):'—'}</td><td>${x.dn?pc(x.dopt/x.dn):'—'}</td><td>${f(x.lost)}</td><td><button data-hd="${x.id}">×</button></td></tr>`).join('')+'</table></div>':'<p class="mu">No saved games yet. Press New Game to save the current session here.</p>'}
+function csv(){const q=v=>'"'+String(v).replace(/"/g,'""')+'"',rows=[['session_id','session_start','session_end','round','player_cards','dealer_cards','result','cumulative_win_pct','decisions','ev_lost']];
+ S.hist.slice().reverse().forEach(x=>(x.rounds||[]).forEach((r,i)=>rows.push([x.id,new Date(x.started).toISOString(),new Date(x.ended).toISOString(),i+1,r.p.join(' '),r.d.join(' '),r.res,x.cum[i],r.decs.map(z=>z.hand+':'+z.played+(z.best&&z.best!=z.played?'>'+z.best:'')).join('; '),r.decs.reduce((a,z)=>a+Math.min(0,z.ev_loss),0).toFixed(4)])));return rows.map(r=>r.map(q).join(',')).join('\n')}
+const jsonOut=()=>JSON.stringify({app:'Blackjack EV Strategy Engine',version:3,exported:new Date().toISOString(),player:{code:S.code,name:S.name},analysis_prompt:PROMPT,sessions:S.hist},null,1);
+async function exp(k){if(k=='imp'){$('gi').click();return}if(!S.hist.length){gm('No saved games yet. Press New Game to save a session first.');return}
+ const txt=k=='csv'?csv():k=='json'?jsonOut():PROMPT+'\n\n'+jsonOut(),fn='blackjack-history-'+S.code+(k=='csv'?'.csv':'.json');
+ if(k=='copy'){try{await navigator.clipboard.writeText(txt);gm('Copied prompt and data to the clipboard.');return}catch(e){}}
+ else{try{const d=window.claude&&await window.claude.use('downloads');if(d){await d.save({filename:fn,data:txt});gm('Saved '+fn);return}}catch(e){if(e&&e.code=='declined'){gm('Download cancelled.');return}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:k=='csv'?'text/csv':'application/json'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();gm('Downloaded '+fn);return}catch(e){}}
+ $('gta').style.display='block';$('gta').value=txt;gm('Direct download is not available here: select all in the box below and copy it.')}
+const cfg=()=>({minbet:$('minbet').value,bank:$('bank').value,bet:$('bet').value});
+function setCfg(c){if(c)for(const k of['minbet','bank','bet'])if(typeof c[k]=='string')$(k).value=c[k].slice(0,12)}
+const b64=t=>btoa(unescape(encodeURIComponent(t))),unb64=t=>decodeURIComponent(escape(atob(t)));
+function parseBackup(t){t=(t||'').trim();if(!t)throw 'The box is empty. Paste a backup code first.';if(!t.startsWith('BJ3.'))throw 'This is not a backup code (it should start with BJ3.).';
+ let o;try{o=JSON.parse(unb64(t.slice(4)))}catch(e){throw 'The code is corrupted or incomplete. Copy it again in full.'}
+ const A=Array.isArray,N=x=>typeof x=='number'&&isFinite(x),card=c=>c&&Number.isInteger(c.i)&&c.i>=0&&c.i<=12,hand=h=>A(h)&&h.every(card),RS=['W','L','P'];
+ if(!o||typeof o!='object'||!/^BJ-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(o.code||''))throw 'The player code field is missing or invalid.';
+ if(!A(o.hist)||!A(o.del))throw 'The history fields are missing.';
+ for(const x of o.hist)if(!x||typeof x.id!='string'||![x.n,x.w,x.l,x.p,x.ended,x.dn,x.dopt,x.lost].every(N)||!A(x.cum))throw 'A saved game has missing or invalid fields.';
+ const c=o.cur;if(!c||!hand(c.pc)||!hand(c.dc)||!A(c.rounds)||!c.rounds.every(r=>r&&hand(r.p)&&hand(r.d)&&RS.includes(r.res))||!A(c.ex)||c.ex.length!=11||!c.ex.every(N)||!N(c.shuf)||(c.res!==null&&!RS.includes(c.res))||!c.decs||typeof c.decs!='object')throw 'The current-session data is missing or invalid.';
+ return o}
+async function makeBackup(){const code='BJ3.'+b64(JSON.stringify(snap()));$('lc').value=code;try{await navigator.clipboard.writeText(code);ss('Backup code copied ('+code.length+' characters). Paste it into Load Code on another device.')}catch(e){$('lc').select();ss('Could not copy automatically. The code is in the box: copy it from there.')}}
+function loadBackup(b){let o;try{o=parseBackup($('lc').value)}catch(e){alert('Load Code failed: '+e);return}
+ if(!b.dataset.arm)ss('Tap Load Code again within 3 seconds to replace this device’s data with the backup ('+o.hist.length+' saved games, '+o.cur.rounds.length+' current rounds).');arm(b,()=>restore(o))}
+function restore(o){Object.assign(S,{code:o.code,name:String(o.name||'').slice(0,24),hist:o.hist,del:o.del,upd:0},o.cur);S.t0=S.t0||Date.now();setCfg(o.cfg);lastL='';save(true);setTgt('p');refresh();ss('Backup restored: '+S.hist.length+' saved games plus the current session.')}
+function renderBet(){const st=stats(),mb=+$('minbet').value,bk=+$('bank').value;
+ if(!(mb>0)){$('bm').innerHTML='<p class="mu">Enter a minimum bet (Table rules) to get a bet recommendation.</p>';return}
+ const dec=st.w+st.l,k=30,ph=(st.w+k*.464)/(dec+k),edge=2*ph-1,half=Math.max(0,edge)/2;let rec=mb,note;
+ if(edge<=0)note='The estimated edge is negative, so Kelly sizing says stay at the minimum bet.';
+ else if(!(bk>0))note='The estimated edge is positive. Enter a bankroll to size above the minimum.';
+ else{rec=Math.min(bk,Math.max(mb,Math.floor(bk*half/mb)*mb));note='Half-Kelly = '+(half*100).toFixed(1)+'% of bankroll, rounded down to a multiple of the minimum bet.'}
+ $('bm').innerHTML=`<div class="warn good">Recommended next bet: <b>${rec}</b>${rec==mb?' (minimum)':''}</div><div class="mu">Win rate excluding pushes: ${dec?pc(st.w/dec):'—'} over ${dec} decided round${dec==1?'':'s'}. Blended estimate ${pc(ph)} (a 46.4% long-run basic-strategy prior counts as ${k} rounds), giving an edge of ${f(edge*100,1)}% per even-money unit. ${note}</div><div class="mu">Past results do not change the odds of the next hand. This stat treats your record only as a noisy estimate and never sizes up after a lucky streak unless that estimate shows a real positive edge, which is rare in blackjack without card counting.</div>`}
+function setTgt(t){S.tgt=t;document.querySelectorAll('[data-tg]').forEach(b=>b.classList.toggle('on',b.dataset.tg==t))}
+function trainer(an,k,bet){if(an.bj)return'';const dc=S.decs[sigOf()],a=an.acts;
+ let t='<div class="row"><b>Your play (trainer):</b>'+['S','H','D','P','R'].filter(x=>a[x]).map(x=>`<button data-pl="${x}" class="${dc&&dc.a==x?'on':''}">${NM[x]}</button>`).join('')+'</div>';
+ if(dc&&a[dc.a]){const l=a[dc.a][0]-a[k][0];t+=l>-1e-9?`<div class="warn good">✓ Optimal play: ${NM[dc.a]} has the highest EV (${f(a[k][0])} per unit).</div>`:`<div class="warn">⚠ Warning: ${ING[dc.a]} here drops your EV by ${f(l)} per unit compared to ${ING[k]}. ${dc.a!='R'&&k!='R'?`${NM[dc.a]} wins ${pc(a[dc.a][1])} / loses ${pc(a[dc.a][2])} of hands; ${NM[k]} wins ${pc(a[k][1])} / loses ${pc(a[k][2])}.`:''}${bet?` ≈ ${f(l*bet,2)} on a ${bet} bet.`:''}</div>`}
+ return t}
+function trn(){const all=S.rounds.flatMap(r=>Object.values(r.decs||{})).concat(Object.values(S.decs)),bad=all.filter(z=>z.loss<-1e-9);return all.length?`<div class="mu">Trainer: ${all.length-bad.length}/${all.length} plays optimal · EV given up ${f(bad.reduce((s,z)=>s+z.loss,0))} units</div>`:''}
+const hv0=0;
 function xtra(){const x=S.ex.slice();S.rounds.forEach((r,i)=>{if(i>=S.shuf)for(const c of r.p.concat(r.d))x[hv(c)]++});return x}
 function stats(){let w=0,l=0,p=0;const cum=[];S.rounds.forEach((r,i)=>{r.res=='W'?w++:r.res=='L'?l++:p++;cum.push(w/(i+1))});return{w,l,p,cum}}
 function arm(b,fn){if(b.dataset.arm){clearTimeout(+b.dataset.arm);delete b.dataset.arm;b.textContent=b.dataset.t;fn();return}b.dataset.t=b.textContent;b.textContent='Click again to confirm';b.dataset.arm=setTimeout(()=>{delete b.dataset.arm;b.textContent=b.dataset.t},3000)}
 function act(a,b){$('msg').textContent='';
  if(a=='W'||a=='L'||a=='P')S.res=S.res==a?null:a;
  else if(a=='next'){if(!S.res||!S.dc.length||S.pc.length<2){$('msg').textContent='Add 2+ player cards, the dealer cards and a round result first.';return}
-  S.rounds.push({p:S.pc,d:S.dc,res:S.res});S.pc=[];S.dc=[];S.res=null;S.tgt='p';$('tp').classList.add('on');$('td').classList.remove('on')}
+  S.rounds.push({p:S.pc,d:S.dc,res:S.res,decs:S.decs});S.pc=[];S.dc=[];S.res=null;S.decs={};setTgt('p')}
  else if(a=='rh')arm(b,()=>{S.shuf=S.rounds.length;S.ex.fill(0)});
- else if(a=='new')arm(b,()=>{S.pc=[];S.dc=[];S.rounds=[];S.shuf=0;S.res=null;S.ex.fill(0)})}
+ else if(a=='new')arm(b,()=>{archive();S.t0=Date.now();S.pc=[];S.dc=[];S.rounds=[];S.shuf=0;S.res=null;S.decs={};S.ex.fill(0)})}
 function drawSession(){
- const st=stats(),rl=rules(),x=xtra(),n=S.rounds.length,cn=c=>c.map(y=>RL[y.i]+y.s).join(' ');$('rn').textContent=n+1;
+ const st=stats(),rl=rules(),x=xtra(),n=S.rounds.length,cn=c=>c.map(y=>RL[y.i]).join(' ');$('rn').textContent=n+1;
  document.querySelectorAll('[data-act=W],[data-act=L],[data-act=P]').forEach(b=>b.classList.toggle('on',b.dataset.act==S.res));
  const pts=st.cum.map((v,i)=>[n>1?i/(n-1)*196+2:100,42-v*40]),last=pts[n-1];
  $('stt').innerHTML=`<b>Win rate: ${n?pc(st.w/n):'—'}</b> <span class="mu">${st.w} W · ${st.l} L · ${st.p} push over ${n} round${n==1?'':'s'}${n-st.p?` · ${pc(st.w/(n-st.p))} excluding pushes`:''}</span>`+(n?`<svg viewBox="0 0 200 44" width="100%" height="44"><line x1="0" x2="200" y1="22" y2="22" style="stroke:var(--bd)" stroke-dasharray="3"/><polyline points="${pts.map(q=>q.join(',')).join(' ')}" fill="none" stroke-width="2" style="stroke:var(--ac)"/><circle cx="${last[0]}" cy="${last[1]}" r="3" style="fill:var(--ac)"/></svg><div class="mu">Cumulative win rate by round (dashed line = 50%)</div>`:'');
- const up=S.dc[0]?val(S.dc[0].i):0;let h='<p class="mu">Add a dealer upcard to see the hole-card estimate.</p>';
+ $('stt').innerHTML+=trn();renderHist();renderBet();persist();const up=S.dc[0]?val(S.dc[0].i):0;let h='<p class="mu">Add a dealer upcard to see the hole-card estimate.</p>';
  if(up){const c=shoeCounts(rl.decks,S.pc.map(hv).concat([up]),x),w=c.slice();if($('pk').checked){if(up==1)w[10]=0;if(up==10)w[1]=0}
   const t=w.reduce((a,b)=>a+b,0)||1,hole=S.dc[1]?val(S.dc[1].i):0,mx=Math.max(...w.slice(1)),top=w.indexOf(mx,1);
   h=`<p class="mu">Dealer shows ${RL[S.dc[0].i]}. Hole-card odds from the ${t} unseen cards (card history, your hand and the upcard removed):</p>`+RL.slice(0,10).map((l,i)=>{const r=i+1,q=w[r]/t;return`<div class="br ${r==hole?'hl':''}"><span>${r==10?'10/J/Q/K':l}</span><i style="width:${mx?q/(mx/t)*100:0}%"></i><b>${pc(q)}</b></div>`}).join('')+
   `<p>${hole?`Actual hole card: <b>${RL[S.dc[1].i]}</b> — the estimate gave it ${pc(w[hole]/t)}.${w[hole]?'':' (That is a dealer blackjack; untick the peek option to include it.)'}`:`Most likely hole card: <b>${top==10?'a 10-value card':top==1?'an Ace':top}</b> (${pc(w[top]/t)}).`} <span class="mu">Estimate from remaining composition, an exact count for this shoe.</span></p>`}
  $('hole').innerHTML=h;
  $('hc').innerHTML=RL.slice(0,10).map((l,i)=>`<div><span>${i==9?'10-K':l}</span><span>${x[i+1]}/${(i==9?16:4)*rl.decks}</span></div>`).join('');
- $('log').innerHTML=n?S.rounds.map((r,i)=>`<div class="row" style="${i<S.shuf?'opacity:.55':''}"><span>#${i+1}</span><span>You ${cn(r.p)} · Dealer ${cn(r.d)}</span><b class="${r.res=='W'?'ok':r.res=='L'?'bd':''}">${{W:'Win',L:'Loss',P:'Push'}[r.res]}</b><span>${pc(st.cum[i])}</span><button data-re="${i}">Edit</button><button data-rd="${i}">×</button>${i<S.shuf?'<span class="lab">before shuffle</span>':''}</div>`).join('')+'<div class="mu">Edit loads a round back onto the table; × deletes it and returns its cards to the shoe count.</div>':'No rounds yet.'}
-$('suits').innerHTML=['♠','♥','♦','♣'].map(s=>`<button data-su="${s}" class="${s=='♠'?'on':''} ${'♥♦'.includes(s)?'red':''}">${s}</button>`).join(' ');
-$('rk').innerHTML=RL.map((r,i)=>`<button data-r="${i}">${r}</button>`).join('');
+ $('log').innerHTML=n?S.rounds.map((r,i)=>`<div class="row" style="${i<S.shuf?'opacity:.55':''}"><span>#${i+1}</span><span>You ${cn(r.p)} · Dealer ${cn(r.d)}</span><b class="${r.res=='W'?'ok':r.res=='L'?'bd':''}">${{W:'Win',L:'Loss',P:'Push'}[r.res]}</b><span>${pc(st.cum[i])}</span><button data-re="${i}">Edit</button><button data-rd="${i}">×</button>${Object.values(r.decs||{}).some(z=>z.loss<-1e-9)?'<span class="lab bd">mistake</span>':''}${i<S.shuf?'<span class="lab">before shuffle</span>':''}</div>`).join('')+'<div class="mu">Edit loads a round back onto the table; × deletes it and returns its cards to the shoe count.</div>':'No rounds yet.'}
+$('rk').innerHTML=RL.slice(0,10).map((r,i)=>`<button data-r="${i}" class="${i==9?'wd':''}">${i==9?'10/Face':r}</button>`).join('');
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
- if(b.id=='tp'||b.id=='td'){S.tgt=b.id=='tp'?'p':'d';$('tp').classList.toggle('on',S.tgt=='p');$('td').classList.toggle('on',S.tgt=='d');return}
- if(d.su){S.suit=d.su;document.querySelectorAll('[data-su]').forEach(x=>x.classList.toggle('on',x==b));return}
+ if(d.pf){prof(d.pf,b);return}
+ if(d.gh){exp(d.gh);return}
+ if(d.hd){S.hist=S.hist.filter(x=>x.id!=d.hd);S.del.push(d.hd);S.upd=0;renderHist();persist();return}
+ if(d.tg){setTgt(d.tg);return}
+ if(d.clr){if(d.clr=='p')S.pc=[];else S.dc=[];setTgt(d.clr);drawCards();show();return}
+ if(d.undo){(S.tgt=='d'?S.dc:S.pc).pop();drawCards();show();return}
+ if(d.pl){const an=window.AN;if(an){S.decs[sigOf()]={a:d.pl,best:an.best,ev:an.acts[d.pl][0],evb:an.acts[an.best][0],loss:an.acts[d.pl][0]-an.acts[an.best][0]};show()}return}
  if(b.id=='rt'){test();return}
  if(d.act){act(d.act,b);drawCards();show();return}
- if(d.rd!=null||d.re!=null){const i=+(d.rd??d.re),r=S.rounds.splice(i,1)[0];if(i<S.shuf)S.shuf--;if(d.re!=null){S.pc=r.p;S.dc=r.d;S.res=r.res}drawCards();show();return}
- if(d.r!=null){const c={i:+d.r,s:S.suit};if(S.tgt=='d'){if(S.dc.length<8)S.dc.push(c)}else if(S.pc.length<10)S.pc.push(c)}
+ if(d.rd!=null||d.re!=null){const i=+(d.rd??d.re),r=S.rounds.splice(i,1)[0];if(i<S.shuf)S.shuf--;if(d.re!=null){S.pc=r.p;S.dc=r.d;S.res=r.res;S.decs=r.decs||{}}drawCards();show();return}
+ if(d.r!=null){const c={i:+d.r,s:'♠♥♦♣'[S.sc++%4]};if(S.tgt=='d'){if(S.dc.length<8)S.dc.push(c)}else if(S.pc.length<10)S.pc.push(c);if($('au').checked){if(S.tgt=='p'&&S.pc.length==2&&!S.dc.length)setTgt('d');else if(S.tgt=='d'&&S.dc.length==1)setTgt('p')}}
  else if(d.x){const k=d.x[0],i=+d.x.slice(1);if(k=='p')S.pc.splice(i,1);else S.dc.splice(i,1)}
  else if(d.s!=null){const i=+d.s+1;S.ex[i]=Math.max(0,S.ex[i]+ +d.d)}else return;
  drawCards();show()});
 document.querySelectorAll('select,input').forEach(el=>el.addEventListener('change',()=>show()));
-drawCards();show();test();
+initP();setTgt('p');drawCards();show();test();
 </script></body></html>
