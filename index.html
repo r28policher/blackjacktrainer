@@ -17,15 +17,37 @@ button,select,input{font:inherit;color:var(--tx);background:var(--bg);border:1px
 .seen{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;font-size:12px}.seen div{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--bd);border-radius:6px;padding:2px 4px}.seen button{padding:0 5px}
 .top{font-size:26px;font-weight:700;color:var(--ac)}.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}tr.best td{font-weight:700;color:var(--ac)}
 .lab{font-size:11px;border:1px solid var(--bd);border-radius:5px;padding:0 5px;color:var(--mu)}.br{display:grid;grid-template-columns:78px 1fr 48px;align-items:center;gap:6px;font-size:12px}.br i{display:block;height:8px;background:var(--ac);border-radius:4px}.br.hl{font-weight:700}#gta{display:none;width:100%;height:120px;margin-top:8px}.warn{border:1px solid var(--bad);color:var(--bad);border-radius:8px;padding:6px 10px;margin:8px 0;font-weight:600}.warn.good{border-color:var(--ac);color:var(--ac)}ul{margin:6px 0;padding-left:18px}.ok{color:var(--ac)}.bd{color:var(--bad)}
+#stick{display:none}
+.fold>summary{list-style:none;cursor:default;pointer-events:none}.fold>summary::-webkit-details-marker{display:none}.fold>summary h3{margin:0 0 8px}
+@media(max-width:768px){
+main{padding:10px 10px 24px;overflow-x:clip}h1{font-size:19px}
+.g{display:flex;flex-direction:column;gap:0}.g>div{display:contents}
+.c{margin-bottom:10px;padding:12px;box-sizing:border-box;max-width:100%;min-width:0}
+#sc-cards{order:1}#res{order:2}#sess{order:3}#sc-rules{order:4}#sc-seen{order:5}#sc-hist{order:6}#gh{order:7}#prof{order:8}#sc-method{order:9}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:19;background:var(--bg)}
+#stick{display:block;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin:0 0 10px;background:var(--sf);border:1px solid var(--ac);border-radius:12px;padding:8px 12px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+#stick:empty{display:none}#stick .skh{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stick .skt{font-size:13px;color:var(--mu)}#stick .skt b{font-size:20px;color:var(--ac)}#stick .warn{margin:6px 0 0;padding:4px 8px;font-size:12px}
+.fold>summary{pointer-events:auto;cursor:pointer;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+.fold>summary h3{margin:0}.fold[open]>summary{margin-bottom:6px}
+.fold>summary::after{content:"▾";font-size:18px;color:var(--mu);transition:transform .15s}.fold[open]>summary::after{transform:rotate(180deg)}
+button,select,input:not([type=checkbox]){min-height:44px}button{padding:8px 12px}
+input,select,textarea{font-size:16px;max-width:100%;box-sizing:border-box}input[type=checkbox]{width:22px;height:22px}
+.rk{gap:8px}.rk button{min-height:56px;padding:0}.row{gap:8px}.rl{gap:10px}.rl label{font-size:13px;min-width:0}
+.chip{min-height:44px}.chip button{min-height:36px;min-width:36px;font-size:18px}
+.seen{grid-template-columns:repeat(2,1fr);gap:8px}.seen div{padding:4px 8px;min-height:44px}.seen button{min-width:44px;min-height:40px;padding:0}
+.top{font-size:22px}.wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}#lc,#gta{width:100%}
+}
 </style></head><body><main>
 <h1>Blackjack EV Strategy Engine <span class="lab">v3 · history &amp; sync</span></h1>
 <p class="mu">Ranks every legal action by expected value per unit of the initial wager. Blackjack carries a house edge under every rule set: this finds the best available play, it cannot guarantee wins or remove that edge.</p>
+<div id="stick" aria-live="polite"></div>
 <div class="g"><div>
-<section class="c"><h3>Cards</h3>
+<section class="c" id="sc-cards"><h3>Cards</h3>
 <div class="row"><span class="mu">Cards go to the highlighted hand ·</span><button data-undo="1">↶ Undo last card</button><label class="mu"><input type="checkbox" id="au" checked> auto-advance</label></div>
 <div class="rk" id="rk"></div>
 <div class="row"><button data-tg="p">Player</button><span id="pc"></span><button data-clr="p">Clear player hand</button></div><div class="row"><button data-tg="d">Dealer</button><span id="dc"></span><button data-clr="d">Reset dealer hand</button></div><p class="mu">Tap a hand name to choose where cards go. Dealer: first card = upcard, then hole card and draws. Auto-advance moves from your 2nd card to the dealer upcard, then back to your hand.</p></section>
-<section class="c"><h3>Table rules</h3><div class="rl">
+<section class="c" id="sc-rules"><details class="fold" open><summary><h3>Table rules</h3></summary><div class="rl">
 <label>Decks<select id="decks"><option>1</option><option>2</option><option>4</option><option selected>6</option><option>8</option></select></label>
 <label>Dealer soft 17<select id="h17"><option value="0">Stands (S17)</option><option value="1">Hits (H17)</option></select></label>
 <label>Blackjack pays<select id="pay"><option value="1.5">3:2</option><option value="1.2">6:5</option><option value="1">1:1</option></select></label>
@@ -37,25 +59,25 @@ button,select,input{font:inherit;color:var(--tx);background:var(--bg);border:1px
 <label>Bet (optional)<input type="number" id="bet" min="0" placeholder="e.g. 25"></label>
 <label>Bankroll (optional)<input type="number" id="bank" min="0" placeholder="e.g. 1000"></label>
 <label>Minimum bet<input type="number" id="minbet" min="0" value="10"></label></div>
-<p class="mu">Assumes dealer peeks for blackjack, one card on split aces, no resplitting.</p></section>
-<section class="c"><h3>Other cards already seen (optional)</h3><div class="seen" id="seen"></div><p class="mu">Count cards from earlier hands or other players so the remaining shoe is exact.</p></section>
+<p class="mu">Assumes dealer peeks for blackjack, one card on split aces, no resplitting.</p></details></section>
+<section class="c" id="sc-seen"><details class="fold" open><summary><h3>Other cards already seen (optional)</h3></summary><div class="seen" id="seen"></div><p class="mu">Count cards from earlier hands or other players so the remaining shoe is exact.</p></details></section>
 </div><div>
-<section class="c" id="prof"><h3>Player profile &amp; sync</h3>
+<section class="c" id="prof"><details class="fold" open><summary><h3>Player profile &amp; sync</h3></summary>
 <div class="row"><span id="pcode" class="chip">—</span><button data-pf="copy">Copy code</button><input id="pname" placeholder="Nickname (optional)" maxlength="24" style="width:150px"></div>
 <div class="row"><button data-pf="mk">Make Code</button><button data-pf="ld">Load Code</button></div><textarea id="lc" placeholder="Make Code puts your backup here and copies it. To restore, paste a code here and press Load Code." style="width:100%;height:60px"></textarea>
 <div id="sst" class="mu">Checking cloud sync…</div>
-<p class="mu">Make Code copies a backup of your data (base64 text) to the clipboard. On another device, paste it above and press Load Code (tap twice to confirm; it replaces that device’s data). Game history can also be downloaded as JSON for AI analysis.</p></section>
+<p class="mu">Make Code copies a backup of your data (base64 text) to the clipboard. On another device, paste it above and press Load Code (tap twice to confirm; it replaces that device’s data). Game history can also be downloaded as JSON for AI analysis.</p></details></section>
 <section class="c" id="sess"><h3>Session · Round <span id="rn">1</span></h3>
 <div class="row"><button data-act="W">Player won</button><button data-act="L">Dealer won</button><button data-act="P">Push</button><button data-act="next">Next Round ▶</button></div>
 <div class="row"><button data-act="new">New Game</button><button data-act="rh">Reset card history</button><span id="msg" class="bd"></span></div><div id="stt"></div><div id="bm"></div>
 <p class="mu">Per round: add your cards, then the dealer cards (first = upcard, next = hole card and draws), log the result, press Next Round. Cards of finished rounds leave the shoe automatically.</p></section>
 <section class="c" id="res"><p class="mu">Choose at least two player cards and a dealer upcard.</p></section>
-<section class="c"><h3>Card history &amp; dealer hole-card prediction</h3>
+<section class="c" id="sc-hist"><details class="fold" open><summary><h3>Card history &amp; dealer hole-card prediction</h3></summary>
 <label class="mu"><input type="checkbox" id="pk" checked> Dealer peeked and has no blackjack (affects A / 10 upcards)</label><div id="hole"></div>
-<h3 style="margin-top:12px">Cards seen since last shuffle</h3><div class="seen" id="hc"></div><h3 style="margin-top:12px">Round log</h3><div id="log" class="mu">No rounds yet.</div></section>
-<section class="c" id="gh"><h3>Game history</h3><div id="ghs"></div>
-<div class="row"><button data-gh="json">Download JSON (for AI analysis)</button><button data-gh="csv">Download rounds CSV</button><button data-gh="copy">Copy AI prompt + data</button><button data-gh="imp">Import JSON</button><input type="file" id="gi" accept=".json,application/json" style="display:none"></div><div id="gmsg" class="mu">New Game saves the current session here.</div><textarea id="gta" readonly></textarea></section>
-<section class="c"><h3>Method &amp; validation <button id="rt">Re-run self-test</button></h3><div id="tst" class="mu"></div></section>
+<h3 style="margin-top:12px">Cards seen since last shuffle</h3><div class="seen" id="hc"></div><h3 style="margin-top:12px">Round log</h3><div id="log" class="mu">No rounds yet.</div></details></section>
+<section class="c" id="gh"><details class="fold" open><summary><h3>Game history</h3></summary><div id="ghs"></div>
+<div class="row"><button data-gh="json">Download JSON (for AI analysis)</button><button data-gh="csv">Download rounds CSV</button><button data-gh="copy">Copy AI prompt + data</button><button data-gh="imp">Import JSON</button><input type="file" id="gi" accept=".json,application/json" style="display:none"></div><div id="gmsg" class="mu">New Game saves the current session here.</div><textarea id="gta" readonly></textarea></details></section>
+<section class="c" id="sc-method"><details class="fold" open><summary><h3>Method &amp; validation</h3></summary><div class="row"><button id="rt">Re-run self-test</button></div><div id="tst" class="mu"></div></details></section>
 </div></div></main>
 <script id="engine">
 //ENGINE_START
@@ -272,4 +294,12 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)r
  drawCards();show()});
 document.querySelectorAll('select,input').forEach(el=>el.addEventListener('change',()=>show()));
 initP();setTgt('p');drawCards();show();test();
+(function(){const mq=matchMedia('(max-width:768px)'),F=[...document.querySelectorAll('.fold')],sync=()=>F.forEach(d=>{d.open=!mq.matches});
+ F.forEach(d=>d.addEventListener('toggle',()=>{if(!mq.matches&&!d.open)d.open=true}));
+ mq.addEventListener?mq.addEventListener('change',sync):mq.addListener(sync);sync();
+ const r=$('res'),k=$('stick'),mk=()=>{k.textContent='';const t=r.querySelector('.top'),h=r.querySelector('.mu'),e=t&&t.nextElementSibling;if(!t||!h)return;
+  const dv=(c,x)=>{const d=document.createElement('div');d.className=c;if(x)d.textContent=x;k.appendChild(d);return d};
+  dv('skh',h.textContent);const l=dv('skt'),a=document.createElement('b'),s=document.createElement('span');a.textContent=t.textContent;s.textContent=e?' '+e.textContent:'';l.append(a,s);
+  const w=r.querySelector('.warn');if(w)dv('warn'+(w.classList.contains('good')?' good':''),w.textContent)};
+ new MutationObserver(mk).observe(r,{childList:true,subtree:true,characterData:true});mk()})();
 </script></body></html>
